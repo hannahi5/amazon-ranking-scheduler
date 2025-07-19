@@ -3,11 +3,12 @@ name: Amazon Ranking Scheduler
 on:
   schedule:
     - cron: '0 * * * *'  # 毎時0分に実行
-  workflow_dispatch:      # 手動実行も可能
+  workflow_dispatch:       # 手動実行も可能
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+
     steps:
       - name: チェックアウト
         uses: actions/checkout@v3
@@ -21,8 +22,9 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Create credentials.json
-        run: echo "${{ secrets.GOOGLE_CREDENTIALS }}" > credentials.json
+      - name: credentials.json を作成
+        run: |
+          echo '${{ secrets.GOOGLE_CREDENTIALS }}' > credentials.json
 
       - name: スクリプトを実行
         run: |
