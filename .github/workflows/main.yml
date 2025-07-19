@@ -1,0 +1,27 @@
+name: Amazon Ranking Scheduler
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # 毎時0分に実行
+  workflow_dispatch:       # 手動実行も可能
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: チェックアウト
+        uses: actions/checkout@v3
+
+      - name: Pythonをセットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 依存パッケージのインストール
+        run: |
+          pip install -r requirements.txt
+
+      - name: スクリプトを実行
+        run: |
+          python amazonranking_to_gsheet_by_id.py
