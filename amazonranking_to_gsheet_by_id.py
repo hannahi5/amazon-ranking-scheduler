@@ -5,16 +5,6 @@ import re
 import datetime
 import time
 
-from datetime import datetime, timedelta, timezone
-
-# 日本時間のタイムゾーンを定義
-JST = timezone(timedelta(hours=9))
-
-def main():
-    log("処理開始")
-    # 日本時間に修正
-    now = datetime.now(JST).strftime('%Y/%m/%d %H:%M')
-
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}")
