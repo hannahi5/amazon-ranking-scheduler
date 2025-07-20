@@ -35,3 +35,10 @@ jobs:
       - name: スクリプトを実行
         run: |
           python amazonranking_to_gsheet_by_id.py
+
+      - name: デバッグ画像をアップロード
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-screenshot
+          path: debug.png
+
