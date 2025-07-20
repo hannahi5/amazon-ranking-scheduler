@@ -51,6 +51,10 @@ def get_html_via_playwright(url):
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto(url, timeout=60000)
+        
+        page.wait_for_selector("#zg-rank-ctnr", timeout=10000)  # ランキング要素が出るまで最大10秒待つ
+        page.screenshot(path="debug.png")  # スクショ保存
+        
         html = page.content()
         browser.close()
         return html
