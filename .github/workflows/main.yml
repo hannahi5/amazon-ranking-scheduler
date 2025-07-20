@@ -37,7 +37,7 @@ jobs:
           python amazonranking_to_gsheet_by_id.py
 
       - name: デバッグ画像をアップロード
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: debug-screenshot
           path: debug.png
