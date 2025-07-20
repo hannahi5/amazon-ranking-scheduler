@@ -6,7 +6,6 @@ on:
     - cron: '15 * * * *'
   workflow_dispatch:    # 手動実行も可能
 
-
 jobs:
   run-script:
     runs-on: ubuntu-latest
@@ -22,7 +21,12 @@ jobs:
 
       - name: 依存パッケージのインストール
         run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Playwrightブラウザのインストール
+        run: |
+          python -m playwright install --with-deps
 
       - name: credentials.json を作成
         run: |
