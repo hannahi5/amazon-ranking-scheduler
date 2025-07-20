@@ -4,6 +4,7 @@ import urllib.request
 import re
 import datetime
 import time
+import pytz  # ★ JST用に追加
 
 
 def log(msg):
@@ -54,7 +55,10 @@ def get_rankings_from_url(url, keyword):
         return ['ランキング情報なし']
 
 log("処理開始")
-now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M')
+
+# ==== JSTの現在時刻を取得 ====
+jst = pytz.timezone('Asia/Tokyo')
+now = datetime.datetime.now(jst).strftime('%Y/%m/%d %H:%M')
 
 normal_url = 'https://www.amazon.co.jp/dp/4798183180'
 kindle_url = 'https://www.amazon.co.jp/dp/B0CYPMKYM3'
