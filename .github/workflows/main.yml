@@ -2,8 +2,10 @@ name: Amazon Ranking Scheduler
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 毎時0分に実行
-  workflow_dispatch:       # 手動実行も可能
+    # JST毎時0分 = UTC毎時15分（日本はUTC+9時間）
+    - cron: '15 * * * *'
+  workflow_dispatch:    # 手動実行も可能
+
 
 jobs:
   run-script:
