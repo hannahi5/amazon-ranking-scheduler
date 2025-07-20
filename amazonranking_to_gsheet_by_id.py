@@ -53,6 +53,11 @@ def get_rankings_from_url(url, keyword):
     if html is None:
         return ['ランキング情報なし']
 
+    # ==== デバッグログ: HTML先頭2000文字出力 ====
+    print("----- HTML DEBUG START -----")
+    print(html[:2000])
+    print("----- HTML DEBUG END -----")
+
     # 「売れ筋ランキング」ブロックを正規表現で抽出
     pattern = r"Amazon 売れ筋ランキング:(.*?)カスタマーレビュー"
     match = re.search(pattern, html, re.S)
