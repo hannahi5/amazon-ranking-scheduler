@@ -4,6 +4,10 @@ import datetime
 import openpyxl
 import time
 import os
+import json
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 BASE_DIR = os.path.dirname(__file__)
 
@@ -17,6 +21,7 @@ def log(msg):
             f.write(f"[{timestamp}] {msg}\n")
     except Exception as e:
         print(f"ログ書き込みエラー: {e}")
+
 
 def extract_rankings_from_html(html, keyword):
     """HTMLからランキング情報を可変カテゴリ対応で抽出（不要語除去版）"""
@@ -38,7 +43,7 @@ def extract_rankings_from_html(html, keyword):
     # 余分な空白除去
     block = re.sub(r'\s+', ' ', block)
 
-    # 💡 不要語（Amazonリンクテキストなど）を削除
+    # 不要語削除
     block = re.sub(r'（?本の売れ筋ランキングを見る）?', '', block)
     block = re.sub(r'\(Kindleストアの売れ筋ランキングを見る\)', '', block)
     block = re.sub(r'本の売れ筋ランキングを見る', '', block)
@@ -46,7 +51,7 @@ def extract_rankings_from_html(html, keyword):
 
     log(f"{keyword}処理前のブロック: {block[:200]}")
 
-    # 💡 汎用正規表現：「カテゴリ名 - 順位」
+    # 汎用正規表現：「カテゴリ名 - 順位」
     pattern = r'([^\-:：]{2,80}?)\s*[-−]\s*(\d{1,3}(?:,\d{3})*位)'
 
     matches = re.findall(pattern, block)
@@ -57,11 +62,11 @@ def extract_rankings_from_html(html, keyword):
     for name, rank in matches:
         name = name.strip()
         rank = rank.strip()
-        # ノイズ除去（Amazonなどを含む行は除外）
+        # ノイズ除去
         if "Amazon" in name or "見る" in name:
             continue
         text = f"{rank}{name}"
-        # 💡 空のかっこ「()」を削除
+        # 空のかっこ「()」を削除
         text = re.sub(r'\(\s*\)', '', text)
         rankings.append(text)
 
@@ -75,12 +80,11 @@ def extract_rankings_from_html(html, keyword):
     log(f"{keyword}ランキング抽出完了: {rankings}")
     return rankings
 
+
 def get_rankings_from_url(url, keyword):
-    """
-    Amazonページからランキングを取得
-    """
+    """Amazonページからランキングを取得"""
     log(f"{keyword}ページ取得開始")
-    
+
     try:
         res = urllib.request.urlopen(url, timeout=15)
         html = res.read().decode('utf-8')
@@ -93,6 +97,7 @@ def get_rankings_from_url(url, keyword):
             return ['-'] * 2
 
     return extract_rankings_from_html(html, keyword)
+
 
 def save_to_excel_with_retry(excel_path, row_data, max_retries=3):
     """Excelファイルに保存（リトライ対応）"""
@@ -145,6 +150,33 @@ def save_to_excel_with_retry(excel_path, row_data, max_retries=3):
 
     return False
 
+
+def append_to_google_sheet(row_data):
+    """Googleスプレッドシートに1行追記"""
+    creds_json = os.environ.get("GOOGLE_CREDENTIALS")
+    if not creds_json:
+        log("環境変数 GOOGLE_CREDENTIALS が見つかりません")
+        return
+
+    scope = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+    ]
+
+    try:
+        info = json.loads(creds_json)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(info, scope)
+        client = gspread.authorize(creds)
+
+        SPREADSHEET_ID = "1oQjRljCUBpCAxdnqb2gYZ4DY_lhb9iVZbpylfyd_PVw"
+
+        sheet = client.open_by_key(SPREADSHEET_ID).sheet1
+        sheet.append_row(row_data, value_input_option='USER_ENTERED')
+        log("Googleスプレッドシートに追記完了")
+    except Exception as e:
+        log(f"Googleスプレッドシート書き込みエラー: {e}")
+
+
 # -------------------------------
 # メイン処理
 # -------------------------------
@@ -162,6 +194,10 @@ row_data = [now] + normal_rankings + kindle_rankings
 log(f"構築された行データ: {row_data}")
 log(f"データ列数: {len(row_data)}")
 
+# ① Googleスプレッドシートへ追記
+append_to_google_sheet(row_data)
+
+# ② （オプション）Excelにも保存しておきたい場合はそのまま残す
 try:
     log("Excel書き込み開始")
     excel_path = os.path.join(BASE_DIR, 'amazonranking_matome.xlsx')
