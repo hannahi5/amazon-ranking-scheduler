@@ -2,7 +2,7 @@ name: Amazon Ranking Scheduler
 
 on:
   schedule:
-    - cron: "0 * * * *"   # 毎時0分に実行（UTC基準だけど「1時間おき」なので気にしなくてOK）
+    - cron: "0 * * * *"   # 毎時0分に実行
   workflow_dispatch:       # 手動実行ボタンもつけておく
 
 permissions:
