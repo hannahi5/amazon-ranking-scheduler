@@ -168,7 +168,6 @@ def append_to_google_sheet(row_data):
         creds = ServiceAccountCredentials.from_json_keyfile_dict(info, scope)
         client = gspread.authorize(creds)
 
-        # ★はなちゃんのシートIDに置き換える
         SPREADSHEET_ID = "1oQjRljCUBpCAxdnqb2gYZ4DY_lhb9iVZbpylfyd_PVw"
 
         sheet = client.open_by_key(SPREADSHEET_ID).sheet1
@@ -191,7 +190,12 @@ def append_to_google_sheet(row_data):
 log("処理開始")
 JST = pytz.timezone('Asia/Tokyo')
 
-now = datetime.datetime.now(JST).strftime('%Y/%m/%d %H:%M')
+now_dt = datetime.datetime.now(JST)
+
+# 分以下を 00:00 に丸める
+rounded = now_dt.replace(minute=0, second=0, microsecond=0)
+
+now = rounded.strftime('%Y/%m/%d %H:%M')
 
 normal_url = 'https://www.amazon.co.jp/dp/4798183180'
 kindle_url = 'https://www.amazon.co.jp/dp/B0CYPMKYM3'
