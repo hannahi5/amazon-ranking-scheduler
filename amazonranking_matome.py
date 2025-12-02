@@ -151,9 +151,8 @@ def save_to_excel_with_retry(excel_path, row_data, max_retries=3):
 
     return False
 
-
 def append_to_google_sheet(row_data):
-    """Googleスプレッドシートに1行追記"""
+    """Googleスプレッドシートに1行追記し、日時列で降順ソートする"""
     creds_json = os.environ.get("GOOGLE_CREDENTIALS")
     if not creds_json:
         log("環境変数 GOOGLE_CREDENTIALS が見つかりません")
@@ -169,11 +168,19 @@ def append_to_google_sheet(row_data):
         creds = ServiceAccountCredentials.from_json_keyfile_dict(info, scope)
         client = gspread.authorize(creds)
 
+        # ★はなちゃんのシートIDに置き換える
         SPREADSHEET_ID = "1oQjRljCUBpCAxdnqb2gYZ4DY_lhb9iVZbpylfyd_PVw"
 
         sheet = client.open_by_key(SPREADSHEET_ID).sheet1
+
+        # ▼ まず行追加
         sheet.append_row(row_data, value_input_option='USER_ENTERED')
         log("Googleスプレッドシートに追記完了")
+
+        # ▼ 日付のある列（A列）で降順ソート
+        sheet.sort((1, 'des'))
+        log("スプレッドシートを日時降順で並べ替えました")
+
     except Exception as e:
         log(f"Googleスプレッドシート書き込みエラー: {e}")
 
