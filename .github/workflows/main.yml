@@ -35,12 +35,3 @@ jobs:
           git add amazonranking_matome.xlsx amazonranking_matome_backup.xlsx || true
           git commit -m "Update ranking data [skip ci]" || echo "No changes"
           git push
-
-      - name: Upload Excel as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: amazon-ranking-excel
-          path: |
-            amazonranking_matome.xlsx
-            amazonranking_matome_backup.xlsx
-            amazonranking_log.txt
