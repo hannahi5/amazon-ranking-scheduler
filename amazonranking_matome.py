@@ -1,6 +1,7 @@
 import urllib.request
 import re
 import datetime
+import pytz
 import openpyxl
 import time
 import os
@@ -181,7 +182,9 @@ def append_to_google_sheet(row_data):
 # メイン処理
 # -------------------------------
 log("処理開始")
-now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M')
+JST = pytz.timezone('Asia/Tokyo')
+
+now = datetime.datetime.now(JST).strftime('%Y/%m/%d %H:%M')
 
 normal_url = 'https://www.amazon.co.jp/dp/4798183180'
 kindle_url = 'https://www.amazon.co.jp/dp/B0CYPMKYM3'
