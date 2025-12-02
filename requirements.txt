@@ -1,5 +1,2 @@
-playwright
-gspread
-oauth2client
-pytz
-pandas
+openpyxl
+requests
