@@ -168,7 +168,7 @@ def append_to_google_sheet(row_data):
         creds = ServiceAccountCredentials.from_json_keyfile_dict(info, scope)
         client = gspread.authorize(creds)
 
-        SPREADSHEET_ID = "1oQjRljCUBpCAxdnqb2gYZ4DY_lhb9iVZbpylfyd_PVw"
+        SPREADSHEET_ID = "1Rv5jj-ix-klCYptudYcxfd-j1jnOPeML"
 
         sheet = client.open_by_key(SPREADSHEET_ID).sheet1
 
