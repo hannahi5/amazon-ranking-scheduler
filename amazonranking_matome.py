@@ -257,7 +257,7 @@ def append_to_google_sheet(row_data):
         creds = ServiceAccountCredentials.from_json_keyfile_dict(info, scope)
         client = gspread.authorize(creds)
 
-        SPREADSHEET_ID = "1Rv5jj-ix-klCYptudYcxfd-j1jnOPeML"
+        SPREADSHEET_ID = "1DSn3IK9ebd0apbqe2WIXKaRGrDVg7XhaK1jlQZrjBk8"
 
         workbook = client.open_by_key(SPREADSHEET_ID)
         try:
