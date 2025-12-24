@@ -55,41 +55,40 @@ def log(msg):
 
 def extract_rankings_from_html(html, keyword):
     """
-    概要:
-        Amazon商品ページのHTML文字列から、売れ筋ランキング情報を抽出する。
-        紙書籍は最大4件、それ以外（Kindle・Audible）は最大2件に正規化して返却する。
-
-    Args:
-        html (str): 対象となるAmazon商品ページのHTML文字列。
-        keyword (str): ランキング種別を示すキーワード（'紙書籍' / 'Kindle' / 'Audible' など）。
-
-    Returns:
-        list[str]: 抽出されたランキング情報のリスト。
-                   - keyword が '紙書籍' の場合: 長さ4のリスト。
-                   - 上記以外の場合（Kindle・Audible等）: 長さ2のリスト。
-                   - 抽出に失敗した場合は、上記長さ分の '-' を要素とするリスト。
+    Amazon商品ページのHTML文字列から、売れ筋ランキング情報を抽出する。
+    紙書籍は最大4件、それ以外（Kindle・Audible）は最大2件に正規化して返却する。
     """
     rankings = []
+    expected_len = 4 if keyword == '紙書籍' else 2
 
-    # 売れ筋ランキング部分を検出（文言揺れにある程度耐えるように検索語を緩める）
-    start = html.find("Amazon 売れ筋ランキング:")
-    if start == -1:
-        start = html.find("売れ筋ランキング:")
+    # 売れ筋ランキング部分を検出（表記揺れを許容）
+    markers = ["Amazon 売れ筋ランキング:", "Amazon 売れ筋ランキング", "売れ筋ランキング:"]
+    start = -1
+    used_marker = None
+    for m in markers:
+        start = html.find(m)
+        if start != -1:
+            used_marker = m
+            break
+
     if start == -1:
         log(f"{keyword}ランキング情報が見つかりません")
-        return ['-'] * (4 if keyword == '紙書籍' else 2)
+        return ['-'] * expected_len
+
+    # ★重要：見出し文字列そのものを block に含めない（Amazon混入の根本原因を潰す）
+    start = start + len(used_marker)
 
     end = html.find("カスタマーレビュー", start)
     if end == -1:
         end = len(html)
+
     block = html[start:end]
 
-    # HTMLタグを除去
-    block = re.sub('<.*?>', '', block)
-    # 余分な空白除去
-    block = re.sub(r'\s+', ' ', block)
+    # HTMLタグ除去＋空白正規化
+    block = re.sub(r'<.*?>', '', block)
+    block = re.sub(r'\s+', ' ', block).strip()
 
-    # 不要語削除
+    # 不要語削除（リンク文言など）
     block = re.sub(r'（?本の売れ筋ランキングを見る）?', '', block)
     block = re.sub(r'\(Kindleストアの売れ筋ランキングを見る\)', '', block)
     block = re.sub(r'\(Audibleの売れ筋ランキングを見る\)', '', block)
@@ -99,34 +98,36 @@ def extract_rankings_from_html(html, keyword):
 
     log(f"{keyword}処理前のブロック: {block[:200]}")
 
-    # 汎用正規表現：「カテゴリ名 - 順位」
+    # 「カテゴリ - 7,569位」形式を抽出
     pattern = r'([^\-:：]{2,80}?)\s*[-−]\s*(\d{1,3}(?:,\d{3})*位)'
-
     matches = re.findall(pattern, block)
+
     if not matches:
         log(f"{keyword}ランキングパターンに一致なし")
-        return ['-'] * (4 if keyword == '紙書籍' else 2)
+        return ['-'] * expected_len
 
     for name, rank in matches:
         name = name.strip()
         rank = rank.strip()
-        # ノイズ除去
-        if "Amazon" in name or "見る" in name:
+
+        # ノイズ除去（「見る」などのリンク断片）
+        if "見る" in name:
             continue
+
+        # 表示フォーマットは既存互換（rank + name）
         text = f"{rank}{name}"
-        # 空のかっこ「()」を削除
         text = re.sub(r'\(\s*\)', '', text)
         rankings.append(text)
 
-    # 列数統一（紙書籍4列、それ以外2列: Kindle / Audible 等）
-    expected_len = 4 if keyword == '紙書籍' else 2
+    # 2列(または4列)に正規化
     if len(rankings) < expected_len:
         rankings += ['-'] * (expected_len - len(rankings))
-    elif len(rankings) > expected_len:
+    else:
         rankings = rankings[:expected_len]
 
     log(f"{keyword}ランキング抽出完了: {rankings}")
     return rankings
+
 
 
 def get_rankings_from_url(url, keyword):
