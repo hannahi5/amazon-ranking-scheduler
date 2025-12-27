@@ -44,13 +44,27 @@ def extract_rankings_from_html(html, keyword, expected_len):
         end = len(html)
     block = html[start:end]
 
+    # --- 修正箇所: クレンジング処理の最適化 ---
+    # 1. まずHTMLタグを除去
     block = re.sub(r'<.*?>', '', block)
+    # 2. リンクテキスト「(〜の売れ筋ランキングを見る)」だけをピンポイントで削除（手前の順位を消さない）
+    block = re.sub(r'\([^()]*?の売れ筋ランキングを見る\)', '', block)
     block = re.sub(r'\s+', ' ', block).strip()
-    block = re.sub(r'\(?.*?の売れ筋ランキングを見る\)?', '', block)
-    block = re.sub(r'.*?の売れ筋ランキングを見る', '', block)
 
-    pattern = r'([^\-:：]{2,80}?)\s*[-−]\s*(\d{1,3}(?:,\d{3})*位)'
-    matches = re.findall(pattern, block)
+    # --- 修正箇所: 判定用ハイフンの種類を拡充 ---
+    # パターン1: [カテゴリ名] - [順位位]
+    # 使用される可能性のあるハイフン類: - (半角), − (マイナス), － (全角), — (エムダッシュ)
+    pattern_name_rank = r'([^\-:：－—]{2,80}?)\s*[-−－—]\s*(\d{1,3}(?:,\d{3})*位)'
+    # パターン2: [順位位] [カテゴリ名]
+    pattern_rank_name = r'(\d{1,3}(?:,\d{3})*位)\s*([^\d\-−－—:：]{2,80})'
+
+    matches = re.findall(pattern_name_rank, block)
+    
+    # パターン1で見つからない場合、逆の並び（パターン2）も試行
+    if not matches:
+        matches_alt = re.findall(pattern_rank_name, block)
+        matches = [(n.strip(), r.strip()) for r, n in matches_alt]
+
     if not matches:
         log(f"{keyword}ランキングパターンに一致なし")
         return ['-'] * expected_len
@@ -58,12 +72,14 @@ def extract_rankings_from_html(html, keyword, expected_len):
     for name, rank in matches:
         name = name.strip()
         rank = rank.strip()
+        # 不要な単語が含まれる場合は除外
         if "Amazon" in name or "見る" in name:
             continue
         text = f"{rank}{name}"
         text = re.sub(r'\(\s*\)', '', text)
         rankings.append(text)
 
+    # 指定された数に調整
     if len(rankings) < expected_len:
         rankings += ['-'] * (expected_len - len(rankings))
     else:
@@ -128,7 +144,7 @@ log("処理開始")
 JST = pytz.timezone('Asia/Tokyo')
 now = datetime.datetime.now(JST).replace(minute=0, second=0, microsecond=0).strftime('%Y/%m/%d %H:%M')
 
-# URL設定（元のパターンの形式）
+# URL設定
 normal_url = 'https://www.amazon.co.jp/gp/product/4798183180/'
 kindle_url = 'https://www.amazon.co.jp/gp/product/B0CYPMKYM3/'
 audible_url = 'https://www.amazon.co.jp/gp/product/B0G66DNXDH/'
