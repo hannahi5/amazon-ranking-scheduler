@@ -6,6 +6,7 @@ import openpyxl
 import time
 import os
 import json
+import traceback
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -136,7 +137,7 @@ def append_to_google_sheet(row_data):
         worksheet.sort((1, 'des'))
         log("Googleスプレッドシートに追記完了")
     except Exception as e:
-        log(f"Googleスプレッドシートエラー: {type(e).__name__}: {e}")
+        log(f"Googleスプレッドシートエラー: {type(e).__name__}: {e}\n{traceback.format_exc()}")
 
 # --- メイン処理 ---
 log("処理開始")
