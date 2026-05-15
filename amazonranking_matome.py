@@ -8,8 +8,7 @@ import os
 import json
 
 import gspread
-from gspread.exceptions import WorksheetNotFound
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 BASE_DIR = os.path.dirname(__file__)
 SHEET_NAME = 'Amazon 売れ筋ランキング'
@@ -124,10 +123,10 @@ def save_to_excel_with_retry(excel_path, row_data, max_retries=3):
 def append_to_google_sheet(row_data):
     creds_json = os.environ.get("GOOGLE_CREDENTIALS")
     if not creds_json: return
-    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     try:
         info = json.loads(creds_json)
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(info, scope)
+        creds = Credentials.from_service_account_info(info, scopes=scopes)
         client = gspread.authorize(creds)
         # 指定されたスプレッドシートID
         SPREADSHEET_ID = "1HwcDLMlm4rit3DYS2xQ4k4AwQgCAipSfiCiF_hGon_I"
@@ -137,7 +136,7 @@ def append_to_google_sheet(row_data):
         worksheet.sort((1, 'des'))
         log("Googleスプレッドシートに追記完了")
     except Exception as e:
-        log(f"Googleスプレッドシートエラー: {e}")
+        log(f"Googleスプレッドシートエラー: {type(e).__name__}: {e}")
 
 # --- メイン処理 ---
 log("処理開始")
