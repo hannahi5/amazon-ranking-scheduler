@@ -122,22 +122,8 @@ def save_to_excel_with_retry(excel_path, row_data, max_retries=3):
     return False
 
 def append_to_google_sheet(row_data):
-    creds_json = os.environ.get("GOOGLE_CREDENTIALS")
-    if not creds_json: return
-    scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    try:
-        info = json.loads(creds_json)
-        creds = Credentials.from_service_account_info(info, scopes=scopes)
-        client = gspread.authorize(creds)
-        # 指定されたスプレッドシートID
-        SPREADSHEET_ID = "1DSn3IK9ebd0apbqe2WIXKaRGrDVg7XhaK1jlQZrjBk8"
-        workbook = client.open_by_key(SPREADSHEET_ID)
-        worksheet = workbook.worksheet(SHEET_NAME)
-        worksheet.append_row(row_data, value_input_option='USER_ENTERED')
-        worksheet.sort((1, 'des'))
-        log("Googleスプレッドシートに追記完了")
-    except Exception as e:
-        log(f"Googleスプレッドシートエラー: {type(e).__name__}: {e}\n{traceback.format_exc()}")
+    # Google Sheetsへの書き込みは GCP VM側に一本化したため無効化
+    pass
 
 # --- メイン処理 ---
 log("処理開始")
